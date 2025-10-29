@@ -1,13 +1,6 @@
 
 chains: [
-  'mainnet',
-  'optimism',
-  'gnosis',
-  'polygon',
-  'sonic',
-  'fantom',
-  'base',
-  'arbitrum',
-  'bera',
-  'katana'
+  # 'mainnet',
+  # 'arbitrum',
+  'filecoin'
 ]

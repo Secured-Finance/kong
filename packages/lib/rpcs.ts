@@ -33,7 +33,14 @@ class pool {
         this.rpcs[this.key(chain, archive)] = {
           clients: Array(this.size).fill(createPublicClient({
             chain, transport: http(this.http(chain, archive), {
-              batch: { batchSize: Number(process.env['RPC_BATCH_SIZE'] || 0) }
+              batch: { batchSize: Number(process.env['RPC_BATCH_SIZE'] || 0) },
+              fetchOptions: {
+                headers: process.env.GLIF_API_KEY
+                  ? {
+                    'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
+                  }
+                  : undefined,
+              }
             })
           })),
           pointers: { next: 0, recycle: 0 }
@@ -52,7 +59,14 @@ class pool {
         const to_recycle = clients[pointer]
         console.log('♻️ ', 'rpc', chainId, pointer)
         clients[pointer] = createPublicClient({
-          chain: to_recycle.chain, transport: http(this.http(to_recycle.chain as Chain, archive))
+          chain: to_recycle.chain, transport: http(this.http(to_recycle.chain as Chain, archive), {
+            fetchOptions: {
+              headers: process.env.GLIF_API_KEY
+                ? {
+                  'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
+                }
+                : undefined,
+            }})
         })
         rpcsForKey.pointers.recycle = (pointer + 1) % clients.length
       })
