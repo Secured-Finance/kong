@@ -15,4 +15,4 @@ subscriptions:
     type: 'timeseries'
     label: 'crv-estimated-apr'
     filter:
-      chains: [1, 10, 250, 42161]
+      chains: [1, 42161, 314159]
