@@ -1,3 +1,4 @@
 {
-  "dev": "postgres://user:password@localhost:5432/user"
+  "dev": "postgres://user:password@localhost:5432/user",
+  "prd": { "ENV": "DATABASE_URL" }
 }

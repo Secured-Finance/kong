@@ -1,16 +1,17 @@
 import 'lib/global'
 
-import path from 'path'
 import dotenv from 'dotenv'
+import path from 'path'
 const envPath = path.join(__dirname, '../..', '.env')
 dotenv.config({ path: envPath })
 
 import fs from 'fs'
-import { rpcs } from './rpcs'
+import http from 'http'
+import { abisConfig, cache, chains, crons as cronsConfig, mq } from 'lib'
 import { Processor, ProcessorPool } from 'lib/processor'
-import { cache, chains, abisConfig, crons as cronsConfig, mq } from 'lib'
-import db from './db'
 import { camelToSnake } from 'lib/strings'
+import db from './db'
+import { rpcs } from './rpcs'
 
 const exportsProcessor = (filePath: string): boolean => {
   const fileContent = fs.readFileSync(filePath, 'utf8')
@@ -43,6 +44,10 @@ const crons = cronsConfig.default
           repeat: { pattern: cron.schedule }
         }).then(() => {
           console.log('⬆', 'cron up', cron.name, chain.id)
+          resolve(null)
+        }).catch(error => {
+          console.error('❌ cron add failed', cron.name, chain.id, error)
+          reject(error)
         })
       }
 
@@ -51,6 +56,10 @@ const crons = cronsConfig.default
         repeat: { pattern: cron.schedule }
       }).then(() => {
         console.log('⬆', 'cron up', cron.name)
+        resolve(null)
+      }).catch(error => {
+        console.error('❌ cron add failed', cron.name, error)
+        reject(error)
       })
 
     }
@@ -61,9 +70,28 @@ const abis = abisConfig.cron.start
     repeat: { pattern: abisConfig.cron.schedule }
   }).then(() => {
     console.log('⬆', 'abis up')
-  }) : Promise<null>
+  }).catch(error => {
+    console.error('❌ abis cron add failed', error)
+    throw error
+  }) : Promise.resolve(null)
+
+// Health check server for Cloud Run
+const port = process.env.PORT || 8080
+const healthServer = http.createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' })
+    res.end('OK')
+  } else {
+    res.writeHead(404)
+    res.end()
+  }
+})
 
 function up() {
+  healthServer.listen(port, () => {
+    console.log(`🏥 health check server listening on port ${port}`)
+  })
+
   Promise.all([
     rpcs.up(),
     cache.up(),
@@ -71,16 +99,16 @@ function up() {
     ...crons,
     abis,
   ]).then(() => {
-
     console.log('🐒 ingest up')
-
   }).catch(error => {
     console.error('🤬', error)
     process.exit(1)
   })
+
 }
 
 function down() {
+  healthServer.close()
   Promise.all([
     ...pools.map(pool => pool.down()),
     rpcs.down(),

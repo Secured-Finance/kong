@@ -164,8 +164,7 @@ export default class Probe implements Processor {
 
     const idle = totalIdle / cpus.length
     const total = totalTick / cpus.length
-    const usage = (total - idle) / total
-
+    const usage = total > 0 ? (total - idle) / total : 0
     return {
       ingest: {
         cpu: { usage },

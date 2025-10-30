@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "production": "ts-node --transpile-only index.ts",
+    "job": "ts-node job.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

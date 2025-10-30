@@ -7,3 +7,6 @@ build/
 cache
 gql-cache*
 __pycache__
+
+# Terraform files
+.terraform/
