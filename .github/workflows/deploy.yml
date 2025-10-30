@@ -1,0 +1,226 @@
+# .github/workflows/deploy.yml
+# Kong (web/ingest + db-migrate job) — Cloud Run centric
+# Auth: GitHub Actions → Workload Identity Federation (WIF)
+# Prereqs (one-time):
+#   1) Create a WIF pool/provider bound to your GitHub repo,
+#      and a Service Account with deploy perms (Run Admin, SA User, Artifact Registry Writer, VPC Access User).
+#   2) Terraform baseline applied (VPC, Redis, VPC Connector, Artifact Registry, SAs).
+#   3) GitHub repo → Settings → Actions → Secrets and variables → Actions → New repository secret:
+#      - GCP_PROJECT_ID, GCP_REGION (e.g. asia-northeast1), GAR_REPO (e.g. kong)
+#      - WIF_PROVIDER (e.g. projects/123456789/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider)
+#      - WIF_SERVICE_ACCOUNT (e.g. sa-kong-ci@<PROJECT_ID>.iam.gserviceaccount.com)
+#      - GCP_REGION (e.g. asia-northeast1)
+#      - VPC_CONNECTOR (e.g. svc-connector-kong)
+#      - SA_WEB, SA_INGEST, SA_JOBS (emails created by Terraform)
+#      - (optional) DOMAIN_HOST (custom domain) or NEXT_PUBLIC_* etc.
+
+name: deploy-kong
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**  # testing purposes
+    paths:
+      - 'packages/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  GAR_REPO: ${{ vars.GAR_REPO }}
+  VPC_CONNECTOR: ${{ vars.VPC_CONNECTOR }}
+  SA_WEB: ${{ vars.SA_WEB }}
+  SA_INGEST: ${{ vars.SA_INGEST }}
+  SA_JOBS: ${{ vars.SA_JOBS }}
+  IMAGE_WEB: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-web
+  IMAGE_INGEST: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-ingest
+  IMAGE_DBMIG: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-db-migrate
+  IMAGE_TERMINAL: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-terminal
+  RPC_URI_FOR_314159: ${{ secrets.RPC_URI_FOR_314159 }}
+  GLIF_API_KEY: ${{ secrets.GLIF_API_KEY }}
+  REDIS_HOST: ${{ vars.REDIS_HOST }}
+  POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+  POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+  POSTGRES_SSL: ${{ vars.POSTGRES_SSL }}
+  POSTGRES_DATABASE: ${{ vars.POSTGRES_DATABASE }}
+  POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+jobs:
+  build-and-deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'   # for WIF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+          token_format: 'access_token'
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure docker auth to Artifact Registry
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Set build metadata
+        id: meta
+        run: |
+          echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "ts=$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+      # Build & push web
+      - name: Build web image
+        run: |
+          docker build \
+            -f packages/web/Dockerfile \
+            -t ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }} \
+            -t ${IMAGE_WEB}:latest \
+            .
+      - name: Push web image
+        run: |
+          docker push ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }}
+          docker push ${IMAGE_WEB}:latest
+
+      # Build & push ingest
+      - name: Build ingest image
+        run: |
+          docker build \
+            -f packages/ingest/Dockerfile \
+            -t ${IMAGE_INGEST}:commit-${{ steps.meta.outputs.sha }} \
+            -t ${IMAGE_INGEST}:latest \
+            .
+      - name: Push ingest image
+        run: |
+          docker push ${IMAGE_INGEST}:commit-${{ steps.meta.outputs.sha }}
+          docker push ${IMAGE_INGEST}:latest
+
+      # Build & push terminal job container
+      - name: Build terminal image
+        run: |
+          docker build \
+            -f packages/terminal/Dockerfile \
+            -t ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }} \
+            -t ${IMAGE_TERMINAL}:latest \
+            .
+      - name: Push terminal image
+        run: |
+          docker push ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }}
+          docker push ${IMAGE_TERMINAL}:latest
+
+      # # Build & push db-migrate job container
+      # - name: Build db-migrate image
+      #   run: |
+      #     docker build \
+      #       -f packages/db/Dockerfile \
+      #       -t ${IMAGE_DBMIG}:commit-${{ steps.meta.outputs.sha }} \
+      #       -t ${IMAGE_DBMIG}:latest \
+      #       .
+      # - name: Push db-migrate image
+      #   run: |
+      #     docker push ${IMAGE_DBMIG}:commit-${{ steps.meta.outputs.sha }}
+      #     docker push ${IMAGE_DBMIG}:latest
+
+      # # Create/Update Cloud Run Job for DB migration, then run it
+      # - name: "Deploy Cloud Run Job: db-migrate (delete and recreate)"
+      #   shell: bash
+      #   run: |
+      #     set -euo pipefail
+      #     JOB_NAME=db-migrate
+      #     # Delete existing job if it exists
+      #     if gcloud run jobs describe ${JOB_NAME} --region=${REGION} >/dev/null 2>&1; then
+      #       gcloud run jobs delete ${JOB_NAME} --region=${REGION} --quiet
+      #     fi
+      #     gcloud run jobs create ${JOB_NAME} \
+      #       --image ${IMAGE_DBMIG}:commit-${{ steps.meta.outputs.sha }} \
+      #       --region ${REGION} \
+      #       --service-account ${SA_JOBS} \
+      #       --vpc-connector ${VPC_CONNECTOR} \
+      #       --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE} \
+      #       --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+      #       --cpu=1 --memory=1Gi \
+      #       --tasks=1 --max-retries=1
+
+      # - name: Run DB migration job
+      #   run: gcloud run jobs execute db-migrate --region=${REGION} --wait
+
+      # Deploy web service
+      - name: "Deploy Cloud Run service: web"
+        run: |
+          gcloud run deploy web \
+            --image ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }} \
+            --region ${REGION} \
+            --platform managed \
+            --service-account ${SA_WEB} \
+            --vpc-connector ${VPC_CONNECTOR} \
+            --allow-unauthenticated \
+            --cpu=1 --memory=1Gi \
+            --min-instances=1 \
+            --concurrency=40 \
+            --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
+            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
+            --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+            --set-env-vars=REDIS_HOST=${REDIS_HOST}
+
+      # Deploy ingest service (CPU always allocated / instance-based billing)
+      # vpc-egress=all-traffic: Allow both VPC (Redis) and public internet (Tigercloud PostgreSQL) access
+      - name: "Deploy Cloud Run service: ingest"
+        run: |
+          gcloud run deploy ingest \
+            --image ${IMAGE_INGEST}:commit-${{ steps.meta.outputs.sha }} \
+            --region ${REGION} \
+            --platform managed \
+            --service-account ${SA_INGEST} \
+            --vpc-connector ${VPC_CONNECTOR} \
+            --vpc-egress=all-traffic \
+            --no-allow-unauthenticated \
+            --cpu=2 --memory=2Gi \
+            --min-instances=1 \
+            --max-instances=1 \
+            --concurrency=1 \
+            --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
+            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
+            --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+            --set-env-vars=REDIS_HOST=${REDIS_HOST}
+
+      # Deploy terminal Cloud Run Job
+      - name: "Deploy Cloud Run Job: terminal-fanout-abis"
+        shell: bash
+        run: |
+          set -euo pipefail
+          JOB_NAME=terminal-fanout-abis
+          # Delete existing job if it exists
+          if gcloud run jobs describe ${JOB_NAME} --region=${REGION} >/dev/null 2>&1; then
+            gcloud run jobs delete ${JOB_NAME} --region=${REGION} --quiet
+          fi
+          gcloud run jobs create ${JOB_NAME} \
+            --image ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }} \
+            --region ${REGION} \
+            --service-account ${SA_JOBS} \
+            --vpc-connector ${VPC_CONNECTOR} \
+            --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
+            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
+            --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+            --set-env-vars=REDIS_HOST=${REDIS_HOST} \
+            --cpu=1 --memory=1Gi \
+            --tasks=1 --max-retries=0 \
+            --args="bun","run","job.ts","--job=fanout-abis"
+
+      - name: Show service URLs
+        run: |
+          gcloud run services describe web --region=${REGION} --format='value(status.url)'
+          gcloud run services describe ingest --region=${REGION} --format='value(status.url)'

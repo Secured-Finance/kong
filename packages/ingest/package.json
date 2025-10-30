@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node index.ts",
-    "production": "ts-node --transpile-only index.ts",
+    "production": "bun run index.ts",
     "test": "ts-node run-tests.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
