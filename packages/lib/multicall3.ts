@@ -1,11 +1,10 @@
-import { arbitrum, mainnet } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 import { customChains } from './chains'
 // const { mode, sonic, bera, katana } = customChains
 const { filecoin } = customChains
 
 export const activations = {
   [mainnet.id]: BigInt(mainnet.contracts.multicall3.blockCreated),
-  [arbitrum.id]: BigInt(arbitrum.contracts.multicall3.blockCreated),
   [filecoin.id]: BigInt(filecoin.contracts.multicall3.blockCreated)
 }
 

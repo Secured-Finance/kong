@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as yaml from 'js-yaml'
 import path from 'path'
 import { defineChain } from 'viem'
-import { arbitrum, mainnet } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 
 export const customChains = {
   filecoin: /*#__PURE__*/ defineChain({
@@ -38,7 +38,7 @@ export const customChains = {
 }
 
 // const viemchains = { arbitrum, base, fantom, gnosis, mainnet, optimism, polygon, ...customChains }
-const viemchains = { arbitrum, mainnet, ...customChains }
+const viemchains = { mainnet, ...customChains }
 
 interface YamlConfig { chains: string [] }
 
