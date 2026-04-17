@@ -35,7 +35,7 @@ class pool {
             chain, transport: http(this.http(chain, archive), {
               batch: { batchSize: Number(process.env['RPC_BATCH_SIZE'] || 0) },
               fetchOptions: {
-                headers: process.env.GLIF_API_KEY
+                headers: process.env.GLIF_API_KEY && chain.id.toString().startsWith('314')
                   ? {
                     'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
                   }
@@ -61,12 +61,13 @@ class pool {
         clients[pointer] = createPublicClient({
           chain: to_recycle.chain, transport: http(this.http(to_recycle.chain as Chain, archive), {
             fetchOptions: {
-              headers: process.env.GLIF_API_KEY
+              headers: process.env.GLIF_API_KEY && to_recycle.chain?.id.toString().startsWith('314')
                 ? {
                   'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
                 }
                 : undefined,
-            }})
+            }
+          })
         })
         rpcsForKey.pointers.recycle = (pointer + 1) % clients.length
       })

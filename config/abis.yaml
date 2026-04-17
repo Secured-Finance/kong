@@ -15,10 +15,10 @@ abis:
       ]
     }
 
-  - abiPath: 'yearn/governance/votingEscrow'
-    sources: [
-      { chainId: 1, address: '0x200C92Dd85730872Ab6A1e7d5E40A067066257cF', inceptBlock: 18370588 }
-    ]
+  # - abiPath: 'yearn/governance/votingEscrow'
+  #   sources: [
+  #     { chainId: 1, address: '0x200C92Dd85730872Ab6A1e7d5E40A067066257cF', inceptBlock: 18370588 }
+  #   ]
 
   - abiPath: 'yearn/3/registry'
     sources: [
@@ -26,29 +26,29 @@ abis:
 
   - abiPath: 'yearn/3/registry2'
     sources: [
-      { chainId: 1, address: '0xff31A1B020c868F6eA3f61Eb953344920EeCA3af', inceptBlock: 19072527 },
-      { chainId: 1, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 20966875 },
-      { chainId: 42161, address: '0xff31A1B020c868F6eA3f61Eb953344920EeCA3af', inceptBlock: 171850013 },
-      { chainId: 42161, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 265347635 },
+      # { chainId: 1, address: '0xff31A1B020c868F6eA3f61Eb953344920EeCA3af', inceptBlock: 19072527 },
+      { chainId: 1, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 24387790 },
+      # { chainId: 42161, address: '0xff31A1B020c868F6eA3f61Eb953344920EeCA3af', inceptBlock: 171850013 },
+      # { chainId: 42161, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 265347635 },
       { chainId: 314159, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 3085591 },
     ]
 
   - abiPath: 'yearn/3/registry3'
     sources: [
-      { chainId: 1, address: '0xd40ecF29e001c76Dcc4cC0D9cd50520CE845B038', inceptBlock: 21176924 },
-      { chainId: 42161, address: '0xd40ecF29e001c76Dcc4cC0D9cd50520CE845B038', inceptBlock: 273947409 },
+      # { chainId: 1, address: '0xd40ecF29e001c76Dcc4cC0D9cd50520CE845B038', inceptBlock: 21176924 },
+      # { chainId: 42161, address: '0xd40ecF29e001c76Dcc4cC0D9cd50520CE845B038', inceptBlock: 273947409 },
     ]
 
   - abiPath: 'yearn/3/vaultFactory'
     sources: [
-      { chainId: 1, address: '0xE9E8C89c8Fc7E8b8F23425688eb68987231178e5', inceptBlock: 18385810 },
-      { chainId: 1, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 19372663 },
-      { chainId: 1, address: '0x5577EdcB8A856582297CdBbB07055E6a6E38eb5f', inceptBlock: 20822383 },
-      { chainId: 1, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 21087110 },
-      { chainId: 42161, address: '0xE9E8C89c8Fc7E8b8F23425688eb68987231178e5', inceptBlock: 142038392 },
-      { chainId: 42161, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 187480878 },
-      { chainId: 42161, address: '0x5577EdcB8A856582297CdBbB07055E6a6E38eb5f', inceptBlock: 256920915 },
-      { chainId: 42161, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 269623415 },
+      # { chainId: 1, address: '0xE9E8C89c8Fc7E8b8F23425688eb68987231178e5', inceptBlock: 18385810 },
+      # { chainId: 1, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 19372663 },
+      # { chainId: 1, address: '0x5577EdcB8A856582297CdBbB07055E6a6E38eb5f', inceptBlock: 20822383 },
+      { chainId: 1, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 24387790 },
+      # { chainId: 42161, address: '0xE9E8C89c8Fc7E8b8F23425688eb68987231178e5', inceptBlock: 142038392 },
+      # { chainId: 42161, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 187480878 },
+      # { chainId: 42161, address: '0x5577EdcB8A856582297CdBbB07055E6a6E38eb5f', inceptBlock: 256920915 },
+      # { chainId: 42161, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 269623415 },
       { chainId: 314159, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 3085508 },
     ]
 
@@ -57,7 +57,7 @@ abis:
       label: 'vault',
       filter: [
         { field: 'apiVersion', op: '>=', value: '3.0.0' },
-        { field: 'origin', op: '=', value: 'yearn' }
+        { field: 'origin', op: '!=', value: 'ydaemon' }
       ]
     }
 
@@ -66,7 +66,7 @@ abis:
       label: 'strategy',
       filter: [
         { field: 'apiVersion', op: '>=', value: '3.0.0' },
-        { field: 'origin', op: '=', value: 'yearn' }
+        { field: 'origin', op: '!=', value: 'ydaemon' }
       ]
     }
 
@@ -108,7 +108,7 @@ abis:
   - abiPath: 'yearn/3/splitter/factory'
     sources: [
       { chainId: 1, address: '0xe28fCC9FB2998ba57754789F6666DAa8C815614D', inceptBlock: 19388854 },
-      { chainId: 42161, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 187480878 },
+      # { chainId: 42161, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 187480878 },
       { chainId: 314159, address: '0xe28fCC9FB2998ba57754789F6666DAa8C815614D', inceptBlock: 3085510 }
     ]
 
@@ -116,32 +116,32 @@ abis:
     sources: [
     ]
 
-  - abiPath: 'yearn/2/registry'
-    sources: [
-      { chainId: 1, address: '0xe15461b18ee31b7379019dc523231c57d1cbc18c', inceptBlock: 11563389 },
-      { chainId: 1, address: '0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804', inceptBlock: 12045555 },
-      { chainId: 42161, address: '0x3199437193625DCcD6F9C9e98BDf93582200Eb1f', inceptBlock: 4841854 }
-    ]
+  # - abiPath: 'yearn/2/registry'
+  #   sources: [
+  #     { chainId: 1, address: '0xe15461b18ee31b7379019dc523231c57d1cbc18c', inceptBlock: 11563389 },
+  #     { chainId: 1, address: '0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804', inceptBlock: 12045555 }
+  #     # { chainId: 42161, address: '0x3199437193625DCcD6F9C9e98BDf93582200Eb1f', inceptBlock: 4841854 }
+  #   ]
 
-  - abiPath: 'yearn/2/registry2'
-    sources: [
-      { chainId: 1, address: '0xaF1f5e1c19cB68B30aAD73846eFfDf78a5863319', inceptBlock: 16215519 },
-    ]
+  # - abiPath: 'yearn/2/registry2'
+  #   sources: [
+  #     { chainId: 1, address: '0xaF1f5e1c19cB68B30aAD73846eFfDf78a5863319', inceptBlock: 16215519 },
+  #   ]
 
-  - abiPath: 'yearn/2/vault'
-    things: {
-      label: 'vault',
-      filter: [{ field: 'apiVersion', op: '<', value: '3.0.0' }]
-    }
+  # - abiPath: 'yearn/2/vault'
+  #   things: {
+  #     label: 'vault',
+  #     filter: [{ field: 'apiVersion', op: '<', value: '3.0.0' }]
+  #   }
 
-  - abiPath: 'yearn/2/strategy'
-    things: {
-      label: 'strategy',
-      filter: [{ field: 'apiVersion', op: '<', value: '3.0.0' }]
-    }
+  # - abiPath: 'yearn/2/strategy'
+  #   things: {
+  #     label: 'strategy',
+  #     filter: [{ field: 'apiVersion', op: '<', value: '3.0.0' }]
+  #   }
 
-  - abiPath: 'yearn/2/tradeHandler'
-    things: {
-      label: 'tradeHandler',
-      filter: []
-    }
+  # - abiPath: 'yearn/2/tradeHandler'
+  #   things: {
+  #     label: 'tradeHandler',
+  #     filter: []
+  #   }

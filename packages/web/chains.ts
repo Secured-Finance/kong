@@ -1,6 +1,6 @@
 import { defineChain } from 'viem'
 // import { arbitrum, base, fantom, gnosis, mainnet, optimism, polygon } from 'viem/chains'
-import { arbitrum, mainnet } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 
 export const customChains = {
   filecoin: /*#__PURE__*/ defineChain({
@@ -44,7 +44,7 @@ const chains = [
   // fantom,
   // base,
   // customChains.mode,
-  arbitrum,
+  // arbitrum,
   // customChains.bera,
   // customChains.katana
   customChains.filecoin
