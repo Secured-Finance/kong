@@ -16,8 +16,8 @@ locals {
     "roles/iam.serviceAccountUser",
     "roles/artifactregistry.writer",
     "roles/secretmanager.secretAccessor",
-    "roles/cloudsql.client",
-    "roles/vpcaccess.user"
+    "roles/compute.instanceAdmin.v1",
+    "roles/compute.osLogin"
   ]
 }
 

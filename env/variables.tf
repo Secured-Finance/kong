@@ -6,7 +6,7 @@ variable "project_id" {
 }
 
 variable "region" {
-  type    = string
+  type = string
 }
 
 variable "vpc_name" {
@@ -25,20 +25,24 @@ variable "vpc_connector_ip_cidr" {
   default = "10.8.0.0/28"
 }
 
-# Memorystore for Redis
-variable "redis_name" {
+# GCE instance configuration
+variable "gce_instance_name" {
   type    = string
-  default = "redis-kong"
+  default = "kong-ingest-redis"
 }
 
-variable "redis_tier" {
+variable "gce_machine_type" {
   type    = string
-  default = "STANDARD_HA" # highly available
+  default = "e2-standard-2"
 }
 
-variable "redis_size_gb" {
+variable "gce_zone" {
+  type = string
+}
+
+variable "gce_boot_disk_size_gb" {
   type    = number
-  default = 5
+  default = 50
 }
 
 # Artifact Registry
@@ -53,9 +57,9 @@ variable "sa_web_name" {
   default = "sa-kong-web"
 }
 
-variable "sa_ingest_name" {
+variable "sa_gce_name" {
   type    = string
-  default = "sa-kong-ingest"
+  default = "sa-kong-gce"
 }
 
 variable "sa_jobs_name" {
