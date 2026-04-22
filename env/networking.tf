@@ -39,11 +39,39 @@ resource "google_compute_router_nat" "nat" {
   depends_on = [google_compute_router.router]
 }
 
-# Serverless VPC Access Connector for Cloud Run ↔ VPC (Redis/Cloud SQL private IP)
+# Serverless VPC Access Connector for Cloud Run ↔ GCE (Redis)
 resource "google_vpc_access_connector" "serverless_connector" {
   name          = "svc-connector-kong"
   region        = var.region
   network       = google_compute_network.vpc.name
   ip_cidr_range = var.vpc_connector_ip_cidr
   depends_on    = [google_project_service.required]
+}
+
+# Firewall rule: Allow SSH access to GCE instance
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "allow-ssh-kong"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["kong-gce"]
+}
+
+# Firewall rule: Allow Cloud Run to access Redis on GCE
+resource "google_compute_firewall" "allow_redis" {
+  name    = "allow-redis-kong"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["6379"]
+  }
+
+  source_ranges = [var.subnet_ip_cidr, var.vpc_connector_ip_cidr]
+  target_tags   = ["kong-gce"]
 }

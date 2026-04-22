@@ -11,9 +11,9 @@ locals {
     "run.googleapis.com",                # Cloud Run
     "iam.googleapis.com",               # IAM
     "artifactregistry.googleapis.com",  # Artifact Registry
+    "compute.googleapis.com",           # VPC/Subnet/GCE
     "vpcaccess.googleapis.com",         # Serverless VPC Access
-    "compute.googleapis.com",           # VPC/Subnet
-    "redis.googleapis.com"              # Memorystore
+    "secretmanager.googleapis.com"      # Secret Manager
   ]
 }
 
