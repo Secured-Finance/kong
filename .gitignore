@@ -7,3 +7,10 @@ build/
 cache
 gql-cache*
 __pycache__
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+env/*.tfvars
+!env/terraform.tfvars.example

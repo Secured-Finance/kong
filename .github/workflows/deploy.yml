@@ -1,0 +1,206 @@
+# .github/workflows/deploy.yml
+# Kong deployment workflow
+# Architecture:
+#   - Cloud Run: web service (Next.js + GraphQL)
+#   - GCE: ingest service + Redis (deployed separately)
+# Auth: GitHub Actions → Workload Identity Federation (WIF)
+# Prereqs (one-time):
+#   1) Create a WIF pool/provider bound to your GitHub repo,
+#      and a Service Account with deploy perms (Run Admin, SA User, Artifact Registry Writer, Compute Admin).
+#   2) Terraform baseline applied (VPC, GCE instance, Artifact Registry, SAs).
+#   3) GitHub repo → Settings → Actions → Secrets and variables → Actions → New repository secret:
+#      - GCP_PROJECT_ID, GCP_REGION (e.g. asia-northeast1), GCP_ZONE, GAR_REPO (e.g. kong)
+#      - WIF_PROVIDER (e.g. projects/123456789/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider)
+#      - WIF_SERVICE_ACCOUNT (e.g. sa-kong-ci@<PROJECT_ID>.iam.gserviceaccount.com)
+#      - GCE_INSTANCE_NAME (e.g. kong-ingest-redis)
+#      - SA_WEB (email created by Terraform)
+#      - VPC_CONNECTOR (VPC connector name for Cloud Run)
+#      - (optional) DOMAIN_HOST (custom domain) or NEXT_PUBLIC_* etc.
+
+name: deploy-kong
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  ZONE: ${{ vars.GCP_ZONE }}
+  GAR_REPO: ${{ vars.GAR_REPO }}
+  VPC_CONNECTOR: ${{ vars.VPC_CONNECTOR }}
+  GCE_INSTANCE_NAME: ${{ vars.GCE_INSTANCE_NAME }}
+  SA_WEB: ${{ vars.SA_WEB }}
+  SA_JOBS: ${{ vars.SA_JOBS }}
+  IMAGE_WEB: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-web
+  IMAGE_INGEST: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-ingest
+  IMAGE_TERMINAL: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-terminal
+  RPC_URI_FOR_1: ${{ secrets.RPC_URI_FOR_1 }}
+  RPC_URI_FOR_314159: ${{ secrets.RPC_URI_FOR_314159 }}
+  GLIF_API_KEY: ${{ secrets.GLIF_API_KEY }}
+  REDIS_HOST: ${{ vars.REDIS_HOST }}
+  POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+  POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+  POSTGRES_SSL: ${{ vars.POSTGRES_SSL }}
+  POSTGRES_SSL_REJECT_UNAUTHORIZED: ${{ vars.POSTGRES_SSL_REJECT_UNAUTHORIZED }}
+  POSTGRES_DATABASE: ${{ vars.POSTGRES_DATABASE }}
+  POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+jobs:
+  build-and-deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'   # for WIF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+          token_format: 'access_token'
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure docker auth to Artifact Registry
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Set build metadata
+        id: meta
+        run: |
+          echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "ts=$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+      # Build & push web
+      - name: Build web image
+        run: |
+          docker build \
+            -f packages/web/Dockerfile \
+            -t ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }} \
+            -t ${IMAGE_WEB}:latest \
+            .
+      - name: Push web image
+        run: |
+          docker push ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }}
+          docker push ${IMAGE_WEB}:latest
+
+      # Build & push ingest
+      - name: Build ingest image
+        run: |
+          docker build \
+            -f packages/ingest/Dockerfile \
+            -t ${IMAGE_INGEST}:commit-${{ steps.meta.outputs.sha }} \
+            -t ${IMAGE_INGEST}:latest \
+            .
+      - name: Push ingest image
+        run: |
+          docker push ${IMAGE_INGEST}:commit-${{ steps.meta.outputs.sha }}
+          docker push ${IMAGE_INGEST}:latest
+
+      # Build & push terminal
+      - name: Build terminal image
+        run: |
+          docker build \
+            -f packages/terminal/Dockerfile \
+            -t ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }} \
+            -t ${IMAGE_TERMINAL}:latest \
+            .
+      - name: Push terminal image
+        run: |
+          docker push ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }}
+          docker push ${IMAGE_TERMINAL}:latest
+
+      # Deploy web service
+      - name: "Deploy Cloud Run service: web"
+        run: |
+          gcloud run deploy web \
+            --image ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }} \
+            --region ${REGION} \
+            --platform managed \
+            --service-account ${SA_WEB} \
+            --vpc-connector ${VPC_CONNECTOR} \
+            --allow-unauthenticated \
+            --cpu=1 --memory=1Gi \
+            --min-instances=1 \
+            --concurrency=40 \
+            --set-env-vars=HTTP_ARCHIVE_1=${RPC_URI_FOR_1},HTTP_FULLNODE_1=${RPC_URI_FOR_1} \
+            --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
+            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
+            --set-env-vars=POSTGRES_SSL_REJECT_UNAUTHORIZED=${POSTGRES_SSL_REJECT_UNAUTHORIZED} \
+            --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+            --set-env-vars=BULLMQ_REDIS_HOST=${REDIS_HOST},BULLMQ_REDIS_PORT=6379 \
+            --set-env-vars=GQL_CACHE_REDIS_URL=redis://${REDIS_HOST}:6379
+
+      # Deploy terminal Cloud Run Job
+      - name: "Deploy Cloud Run Job: terminal-fanout-abis"
+        shell: bash
+        run: |
+          set -euo pipefail
+          JOB_NAME=terminal-fanout-abis
+          # Delete existing job if it exists
+          if gcloud run jobs describe ${JOB_NAME} --region=${REGION} >/dev/null 2>&1; then
+            gcloud run jobs delete ${JOB_NAME} --region=${REGION} --quiet
+          fi
+          gcloud run jobs create ${JOB_NAME} \
+            --image ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }} \
+            --region ${REGION} \
+            --service-account ${SA_JOBS} \
+            --vpc-connector ${VPC_CONNECTOR} \
+            --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
+            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
+            --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+            --set-env-vars=REDIS_HOST=${REDIS_HOST} \
+            --cpu=1 --memory=1Gi \
+            --tasks=1 --max-retries=0 \
+            --args="bun","run","job.ts","--job=fanout-abis"
+
+      # Deploy ingest to GCE instance
+      - name: "Deploy to GCE: ingest"
+        run: |
+          # Copy deployment script to GCE
+          gcloud compute scp .github/scripts/deploy-ingest-to-gce.sh ${GCE_INSTANCE_NAME}:/tmp/deploy-ingest-to-gce.sh \
+            --zone=${ZONE} \
+            --project=${PROJECT_ID}
+
+          # Execute deployment script on GCE with environment variables
+          gcloud compute ssh ${GCE_INSTANCE_NAME} \
+            --zone=${ZONE} \
+            --project=${PROJECT_ID} \
+            --command="export IMAGE_INGEST=${IMAGE_INGEST} && \
+                       export RPC_URI_FOR_1='${RPC_URI_FOR_1}' && \
+                       export RPC_URI_FOR_314159='${RPC_URI_FOR_314159}' && \
+                       export GLIF_API_KEY='${GLIF_API_KEY}' && \
+                       export POSTGRES_HOST='${POSTGRES_HOST}' && \
+                       export POSTGRES_DATABASE='${POSTGRES_DATABASE}' && \
+                       export POSTGRES_PORT='${POSTGRES_PORT}' && \
+                       export POSTGRES_SSL='${POSTGRES_SSL}' && \
+                       export POSTGRES_SSL_REJECT_UNAUTHORIZED='${POSTGRES_SSL_REJECT_UNAUTHORIZED}' && \
+                       export POSTGRES_USER='${POSTGRES_USER}' && \
+                       export POSTGRES_PASSWORD='${POSTGRES_PASSWORD}' && \
+                       bash /tmp/deploy-ingest-to-gce.sh"
+
+      - name: Show service URLs
+        run: |
+          echo "Web service URL:"
+          gcloud run services describe web --region=${REGION} --format='value(status.url)'
+          echo ""
+          echo "Ingest service running on GCE instance: ${GCE_INSTANCE_NAME}"
+          GCE_IP=$(gcloud compute instances describe ${GCE_INSTANCE_NAME} \
+            --zone=${ZONE} \
+            --format='value(networkInterfaces[0].accessConfigs[0].natIP)')
+          echo "GCE External IP: ${GCE_IP}"

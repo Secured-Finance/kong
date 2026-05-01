@@ -1,90 +1,44 @@
-import * as yaml from 'js-yaml'
 import * as fs from 'fs'
+import * as yaml from 'js-yaml'
 import path from 'path'
 import { defineChain } from 'viem'
-import { arbitrum, base, fantom, gnosis, mainnet, optimism, polygon } from 'viem/chains'
+import { mainnet } from 'viem/chains'
 
 export const customChains = {
-  sonic: /*#__PURE__*/ defineChain({
-    id: 146,
-    name: 'Sonic',
+  filecoin: /*#__PURE__*/ defineChain({
+    // id: 314,
+    // name: 'Filecoin - Mainnet',
+    id: 314159,
+    name: 'Filecoin - Testnet',
     nativeCurrency: {
+      name: 'Filecoin',
+      symbol: 'FIL',
       decimals: 18,
-      name: 'Sonic',
-      symbol: 'S',
     },
     rpcUrls: {
-      default: { http: ['https://rpc.soniclabs.com'] },
+      default: {
+        // http: ['https://api.node.glif.io/rpc/v1'],
+        http: ['https://api.calibration.node.glif.io/rpc/v1'],
+      },
     },
     blockExplorers: {
       default: {
-        name: 'Sonic Explorer',
-        url: 'https://sonicscan.org',
+        name: 'Filfox',
+        url: 'https://filfox.info/en',
       },
     },
     contracts: {
       multicall3: {
         address: '0xca11bde05977b3631167028862be2a173976ca11',
-        blockCreated: 60,
-      },
-    },
-    testnet: false,
-  }),
-
-  bera: /*#__PURE__*/ defineChain({
-    id: 80094,
-    name: 'Berachain',
-    nativeCurrency: {
-      decimals: 18,
-      name: 'BERA Token',
-      symbol: 'BERA',
-    },
-    rpcUrls: {
-      default: { http: ['https://rpc.berachain.com'] },
-    },
-    blockExplorers: {
-      default: {
-        name: 'Berascan',
-        url: 'https://berascan.com',
-      },
-    },
-    contracts: {
-      multicall3: {
-        address: '0xcA11bde05977b3631167028862bE2a173976CA11',
         blockCreated: 0,
       },
     },
-    testnet: false,
-  }),
-
-  katana: /*#__PURE__*/ defineChain({
-    id: 747474,
-    name: 'Katana',
-    nativeCurrency: {
-      decimals: 18,
-      name: 'Ether',
-      symbol: 'ETH',
-    },
-    rpcUrls: {
-      default: { http: ['https://rpc.katanarpc.com'] },
-    },
-    blockExplorers: {
-      default: {
-        name: 'Katana Explorer',
-        url: 'https://explorer.katanarpc.com',
-      },
-    },
-    contracts: {
-      multicall3: {
-        address: '0xcA11bde05977b3631167028862bE2a173976CA11',
-        blockCreated: 1898013,
-      },
-    },
-    testnet: false,
+    testnet: true,
   })
 }
 
-const viemchains = { arbitrum, base, fantom, gnosis, mainnet, optimism, polygon, ...customChains }
+// const viemchains = { arbitrum, base, fantom, gnosis, mainnet, optimism, polygon, ...customChains }
+const viemchains = { mainnet, ...customChains }
 
 interface YamlConfig { chains: string [] }
 
