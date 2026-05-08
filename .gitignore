@@ -12,5 +12,9 @@ __pycache__
 .terraform/
 *.tfstate
 *.tfstate.backup
+*.tfstate.lock.info
+.terraform.lock.hcl
 env/*.tfvars
 !env/terraform.tfvars.example
+terraform/environments/**/terraform.tfvars
+!terraform/environments/**/terraform.tfvars.example

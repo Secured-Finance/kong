@@ -1,14 +1,14 @@
 ########################################
-# networking.tf — VPC, Subnet, VPC Connector, PSC range
+# networking module — VPC, Subnet, VPC Connector, PSC range
 ########################################
 resource "google_compute_network" "vpc" {
   name                    = var.vpc_name
   auto_create_subnetworks = false
-  depends_on              = [google_project_service.required]
+  depends_on              = [var.api_services_dependency]
 }
 
 resource "google_compute_subnetwork" "subnet" {
-  name                     = "subnet-kong"
+  name                     = var.subnet_name
   ip_cidr_range            = var.subnet_ip_cidr
   region                   = var.region
   network                  = google_compute_network.vpc.id
@@ -17,15 +17,15 @@ resource "google_compute_subnetwork" "subnet" {
 
 # Cloud Router (required for Cloud NAT)
 resource "google_compute_router" "router" {
-  name       = "router-kong"
+  name       = var.router_name
   region     = var.region
   network    = google_compute_network.vpc.id
-  depends_on = [google_project_service.required]
+  depends_on = [var.api_services_dependency]
 }
 
 # Cloud NAT (allows VPC resources to access internet)
 resource "google_compute_router_nat" "nat" {
-  name                               = "nat-kong"
+  name                               = var.nat_name
   router                             = google_compute_router.router.name
   region                             = var.region
   nat_ip_allocate_option             = "AUTO_ONLY"
@@ -41,16 +41,16 @@ resource "google_compute_router_nat" "nat" {
 
 # Serverless VPC Access Connector for Cloud Run ↔ GCE (Redis)
 resource "google_vpc_access_connector" "serverless_connector" {
-  name          = "svc-connector-kong"
+  name          = var.vpc_connector_name
   region        = var.region
   network       = google_compute_network.vpc.name
   ip_cidr_range = var.vpc_connector_ip_cidr
-  depends_on    = [google_project_service.required]
+  depends_on    = [var.api_services_dependency]
 }
 
 # Firewall rule: Allow SSH access to GCE instance
 resource "google_compute_firewall" "allow_ssh" {
-  name    = "allow-ssh-kong"
+  name    = var.firewall_ssh_name
   network = google_compute_network.vpc.name
 
   allow {
@@ -64,7 +64,7 @@ resource "google_compute_firewall" "allow_ssh" {
 
 # Firewall rule: Allow Cloud Run to access Redis on GCE
 resource "google_compute_firewall" "allow_redis" {
-  name    = "allow-redis-kong"
+  name    = var.firewall_redis_name
   network = google_compute_network.vpc.name
 
   allow {

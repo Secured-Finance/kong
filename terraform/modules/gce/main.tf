@@ -1,5 +1,5 @@
 ########################################
-# gce.tf — GCE instance for ingest & redis
+# gce module — GCE instance for ingest & redis
 ########################################
 
 # Service account for GCE instance
@@ -42,8 +42,8 @@ resource "google_compute_instance" "kong_gce" {
   }
 
   network_interface {
-    network    = google_compute_network.vpc.name
-    subnetwork = google_compute_subnetwork.subnet.name
+    network    = var.network_name
+    subnetwork = var.subnet_name
 
     # Enable external IP for SSH access and internet connectivity
     access_config {
@@ -59,8 +59,8 @@ resource "google_compute_instance" "kong_gce" {
   metadata_startup_script = file("${path.module}/startup-script.sh")
 
   depends_on = [
-    google_project_service.required,
-    google_compute_subnetwork.subnet
+    var.api_services_dependency,
+    var.subnet_dependency
   ]
 
   allow_stopping_for_update = true

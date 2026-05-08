@@ -1,5 +1,5 @@
 ########################################
-# wif.main.tf — SA, WIF pool/provider, IAM bindings
+# wif module — SA, WIF pool/provider, IAM bindings
 ########################################
 
 # CI Service Account used by GitHub Actions via WIF
@@ -49,10 +49,10 @@ resource "google_iam_workload_identity_pool_provider" "provider" {
   attribute_condition = var.github_ref != "" ? "attribute.repository==\"${var.github_org}/${var.github_repo}\" && attribute.ref==\"${var.github_ref}\"" : "attribute.repository==\"${var.github_org}/${var.github_repo}\""
 
   attribute_mapping = {
-    "google.subject"   = "assertion.sub"
-    "attribute.actor"  = "assertion.actor"
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
     "attribute.repository" = "assertion.repository"
-    "attribute.ref"    = "assertion.ref"
+    "attribute.ref"        = "assertion.ref"
   }
 }
 

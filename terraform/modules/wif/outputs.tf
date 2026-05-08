@@ -1,5 +1,5 @@
 ########################################
-# wif.outputs.tf
+# wif module outputs
 ########################################
 output "wif_provider_resource_name" {
   description = "Fully-qualified Workload Identity Provider resource name for GitHub Actions"

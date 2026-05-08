@@ -1,0 +1,41 @@
+# terraform.tfvars.example
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required variables
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+gce_zone   = "us-central1-a"
+
+# Optional: Resource names (customize for multi-environment setup or existing resources)
+# vpc_name               = "vpc-kong"
+# gce_instance_name      = "kong-ingest-redis"
+# ar_repo_name           = "kong"
+
+# Optional: Service account names
+# sa_web_name   = "sa-kong-web"
+# sa_gce_name   = "sa-kong-gce"
+# sa_jobs_name  = "sa-kong-jobs"
+# sa_ci_name    = "sa-kong-ci"
+
+# Optional: Networking resource names
+# subnet_name          = "subnet-kong"
+# router_name          = "router-kong"
+# nat_name             = "nat-kong"
+# vpc_connector_name   = "svc-connector-kong"
+# firewall_ssh_name    = "allow-ssh-kong"
+# firewall_redis_name  = "allow-redis-kong"
+
+# Optional: Network configuration
+# subnet_ip_cidr        = "10.10.0.0/20"
+# vpc_connector_ip_cidr = "10.8.0.0/28"
+
+# Optional: GCE instance configuration
+# gce_machine_type      = "e2-standard-2"
+# gce_boot_disk_size_gb = 50
+
+# Optional: WIF configuration
+# wif_pool_id     = "gh-pool"
+# wif_provider_id = "gh-provider"
+# github_org      = "Secured-Finance"
+# github_repo     = "kong"
+# github_ref      = ""  # Leave empty to allow any ref

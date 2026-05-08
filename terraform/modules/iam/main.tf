@@ -1,5 +1,5 @@
 ########################################
-# iam.tf — Service Accounts & IAM bindings (least-privilege runtime SAs)
+# iam module — Service Accounts & IAM bindings (least-privilege runtime SAs)
 ########################################
 resource "google_service_account" "sa_web" {
   account_id   = var.sa_web_name

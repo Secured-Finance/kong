@@ -1,5 +1,5 @@
 ########################################
-# notes.run.tf (comment only) — deployment notes
+# cloud_run module — deployment notes
 ########################################
 # Architecture overview:
 # - Cloud Run: web service (deployed via GitHub Actions)
@@ -28,3 +28,5 @@
 # 4. SSH access to GCE for terminal:
 #    - gcloud compute ssh kong-ingest-redis --zone=<zone>
 #    - cd /opt/kong && bun run terminal
+#
+# This module is intentionally empty as Cloud Run deployment is handled via GitHub Actions
