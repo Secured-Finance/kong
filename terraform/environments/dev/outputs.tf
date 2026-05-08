@@ -40,9 +40,10 @@ output "redis_port" {
   value = module.gce.redis_port
 }
 
-# Artifact Registry
-output "artifact_registry_repo" {
-  value = module.artifact_registry.artifact_registry_repo_id
+# Artifact Registry (from shared state)
+output "artifact_registry_repository_url" {
+  description = "Artifact Registry repository URL (from shared infrastructure)"
+  value       = data.terraform_remote_state.shared.outputs.artifact_registry_repository_url
 }
 
 # Service accounts
@@ -58,18 +59,13 @@ output "sa_jobs_email" {
   value = module.iam.sa_jobs_email
 }
 
-# WIF outputs
+# WIF outputs (from shared state)
 output "wif_provider_resource_name" {
-  description = "Fully-qualified Workload Identity Provider resource name for GitHub Actions"
-  value       = module.wif.wif_provider_resource_name
+  description = "Fully-qualified Workload Identity Provider resource name for GitHub Actions (from shared infrastructure)"
+  value       = data.terraform_remote_state.shared.outputs.wif_provider_resource_name
 }
 
 output "ci_service_account_email" {
-  description = "Service Account email used by GitHub Actions"
-  value       = module.wif.ci_service_account_email
-}
-
-output "wif_pool_name" {
-  description = "Workload Identity Pool full name"
-  value       = module.wif.wif_pool_name
+  description = "Service Account email used by GitHub Actions (from shared infrastructure)"
+  value       = data.terraform_remote_state.shared.outputs.ci_service_account_email
 }

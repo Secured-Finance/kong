@@ -1,0 +1,18 @@
+# terraform.tfvars.example
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required variables
+project_id = "your-gcp-project-id"
+region     = "asia-northeast1"
+
+# Note: All resource names (Artifact Registry, WIF, Service Accounts) are
+# hardcoded in main.tf to prevent environment-specific variations.
+#
+# Resources created by this environment:
+# - Artifact Registry repository: "kong"
+# - WIF Pool: "gh-pool"
+# - WIF Provider: "gh-provider"
+# - CI Service Account: "sa-kong-ci"
+# - GitHub org/repo: "Secured-Finance/kong"
+#
+# These are environment-agnostic and shared across all environments (dev, prd, etc.)

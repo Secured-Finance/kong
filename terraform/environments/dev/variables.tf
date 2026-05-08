@@ -45,12 +45,6 @@ variable "gce_boot_disk_size_gb" {
   default = 50
 }
 
-# Artifact Registry
-variable "ar_repo_name" {
-  type    = string
-  default = "kong"
-}
-
 # Service accounts (runtimes)
 variable "sa_web_name" {
   type    = string
@@ -65,45 +59,6 @@ variable "sa_gce_name" {
 variable "sa_jobs_name" {
   type    = string
   default = "sa-kong-jobs"
-}
-
-# WIF variables
-variable "wif_pool_id" {
-  description = "Workload Identity Pool ID (resource short name)"
-  type        = string
-  default     = "gh-pool"
-}
-
-variable "wif_provider_id" {
-  description = "Workload Identity Provider ID (resource short name)"
-  type        = string
-  default     = "gh-provider"
-}
-
-variable "github_org" {
-  description = "GitHub organization / user name"
-  type        = string
-  default     = "Secured-Finance"
-}
-
-variable "github_repo" {
-  description = "GitHub repository name"
-  type        = string
-  default     = "kong"
-}
-
-# Optional: narrow by branch/tag ref (e.g. "refs/heads/main"). If empty, repo-scoped only.
-variable "github_ref" {
-  description = "GitHub ref to allow (e.g. refs/heads/main). Leave empty to allow any ref."
-  type        = string
-  default     = ""
-}
-
-# Optional: CI Service Account name (email becomes <name>@<project>.iam.gserviceaccount.com)
-variable "sa_ci_name" {
-  description = "Service Account name for CI/CD"
-  type        = string
-  default     = "sa-kong-ci"
 }
 
 # Networking resource names

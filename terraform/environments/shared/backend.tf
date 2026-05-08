@@ -1,11 +1,11 @@
 ########################################
-# backend.tf — Terraform state backend configuration for dev environment
+# backend.tf — Terraform state backend configuration for shared resources
 ########################################
 # Uncomment and configure when using remote state (e.g., GCS bucket)
 # terraform {
 #   backend "gcs" {
 #     bucket = "your-terraform-state-bucket"
-#     prefix = "dev"
+#     prefix = "shared"
 #   }
 # }
 

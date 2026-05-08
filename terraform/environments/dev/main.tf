@@ -1,6 +1,16 @@
 ########################################
 # main.tf — APIs & module orchestration for dev environment
 ########################################
+
+# Reference shared infrastructure state
+data "terraform_remote_state" "shared" {
+  backend = "local"
+
+  config = {
+    path = "../shared/terraform.tfstate"
+  }
+}
+
 resource "random_id" "suffix" {
   byte_length = 2
 }
@@ -8,12 +18,11 @@ resource "random_id" "suffix" {
 # Enable required services/APIs
 locals {
   services = [
-    "run.googleapis.com",              # Cloud Run
-    "iam.googleapis.com",              # IAM
-    "artifactregistry.googleapis.com", # Artifact Registry
-    "compute.googleapis.com",          # VPC/Subnet/GCE
-    "vpcaccess.googleapis.com",        # Serverless VPC Access
-    "secretmanager.googleapis.com"     # Secret Manager
+    "run.googleapis.com",          # Cloud Run
+    "iam.googleapis.com",          # IAM
+    "compute.googleapis.com",      # VPC/Subnet/GCE
+    "vpcaccess.googleapis.com",    # Serverless VPC Access
+    "secretmanager.googleapis.com" # Secret Manager
   ]
 }
 
@@ -50,15 +59,6 @@ module "networking" {
   api_services_dependency = google_project_service.required
 }
 
-# Artifact Registry module - Docker repository
-module "artifact_registry" {
-  source = "../../modules/artifact_registry"
-
-  region                  = var.region
-  ar_repo_name            = var.ar_repo_name
-  api_services_dependency = google_project_service.required
-}
-
 # GCE module - Compute instance for ingest + Redis
 module "gce" {
   source = "../../modules/gce"
@@ -73,19 +73,6 @@ module "gce" {
   subnet_name             = module.networking.subnet_name
   api_services_dependency = google_project_service.required
   subnet_dependency       = module.networking.subnet_self_link
-}
-
-# WIF module - Workload Identity Federation for GitHub Actions
-module "wif" {
-  source = "../../modules/wif"
-
-  project_id      = var.project_id
-  wif_pool_id     = var.wif_pool_id
-  wif_provider_id = var.wif_provider_id
-  github_org      = var.github_org
-  github_repo     = var.github_repo
-  github_ref      = var.github_ref
-  sa_ci_name      = var.sa_ci_name
 }
 
 # Redis module - placeholder for future expansion
