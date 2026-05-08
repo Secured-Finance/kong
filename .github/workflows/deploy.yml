@@ -53,7 +53,8 @@ env:
   IMAGE_TERMINAL: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-terminal
   RPC_URI_FOR_1: ${{ secrets.RPC_URI_FOR_1 }}
   RPC_URI_FOR_314159: ${{ secrets.RPC_URI_FOR_314159 }}
-  GLIF_API_KEY: ${{ secrets.GLIF_API_KEY }}
+  GLIF_API_KEY_314: ${{ secrets.GLIF_API_KEY_314 }}
+  GLIF_API_KEY_314159: ${{ secrets.GLIF_API_KEY_314159 }}
   REDIS_HOST: ${{ vars.REDIS_HOST }}
   POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
   POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
@@ -159,7 +160,8 @@ jobs:
             --concurrency=40 \
             --set-env-vars=HTTP_ARCHIVE_1=${RPC_URI_FOR_1},HTTP_FULLNODE_1=${RPC_URI_FOR_1} \
             --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
-            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=GLIF_API_KEY_314=${GLIF_API_KEY_314} \
+            --set-env-vars=GLIF_API_KEY_314159=${GLIF_API_KEY_314159} \
             --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
             --set-env-vars=POSTGRES_SSL_REJECT_UNAUTHORIZED=${POSTGRES_SSL_REJECT_UNAUTHORIZED} \
             --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
@@ -181,7 +183,8 @@ jobs:
             --service-account ${SA_JOBS} \
             --vpc-connector ${VPC_CONNECTOR} \
             --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
-            --set-env-vars=GLIF_API_KEY=${GLIF_API_KEY} \
+            --set-env-vars=GLIF_API_KEY_314=${GLIF_API_KEY_314} \
+            --set-env-vars=GLIF_API_KEY_314159=${GLIF_API_KEY_314159} \
             --set-env-vars=POSTGRES_HOST=${POSTGRES_HOST},POSTGRES_DATABASE=${POSTGRES_DATABASE},POSTGRES_PORT=${POSTGRES_PORT},POSTGRES_SSL=${POSTGRES_SSL} \
             --set-env-vars=POSTGRES_USER=${POSTGRES_USER},POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
             --set-env-vars=REDIS_HOST=${REDIS_HOST} \
@@ -202,17 +205,18 @@ jobs:
             --zone=${ZONE} \
             --project=${PROJECT_ID} \
             --command="export IMAGE_INGEST=${IMAGE_INGEST} && \
-                       export RPC_URI_FOR_1='${RPC_URI_FOR_1}' && \
-                       export RPC_URI_FOR_314159='${RPC_URI_FOR_314159}' && \
-                       export GLIF_API_KEY='${GLIF_API_KEY}' && \
-                       export POSTGRES_HOST='${POSTGRES_HOST}' && \
-                       export POSTGRES_DATABASE='${POSTGRES_DATABASE}' && \
-                       export POSTGRES_PORT='${POSTGRES_PORT}' && \
-                       export POSTGRES_SSL='${POSTGRES_SSL}' && \
-                       export POSTGRES_SSL_REJECT_UNAUTHORIZED='${POSTGRES_SSL_REJECT_UNAUTHORIZED}' && \
-                       export POSTGRES_USER='${POSTGRES_USER}' && \
-                       export POSTGRES_PASSWORD='${POSTGRES_PASSWORD}' && \
-                       bash /tmp/deploy-ingest-to-gce.sh"
+                        export RPC_URI_FOR_1='${RPC_URI_FOR_1}' && \
+                        export RPC_URI_FOR_314159='${RPC_URI_FOR_314159}' && \
+                        export GLIF_API_KEY_314='${GLIF_API_KEY_314}' && \
+                        export GLIF_API_KEY_314159='${GLIF_API_KEY_314159}' && \
+                        export POSTGRES_HOST='${POSTGRES_HOST}' && \
+                        export POSTGRES_DATABASE='${POSTGRES_DATABASE}' && \
+                        export POSTGRES_PORT='${POSTGRES_PORT}' && \
+                        export POSTGRES_SSL='${POSTGRES_SSL}' && \
+                        export POSTGRES_SSL_REJECT_UNAUTHORIZED='${POSTGRES_SSL_REJECT_UNAUTHORIZED}' && \
+                        export POSTGRES_USER='${POSTGRES_USER}' && \
+                        export POSTGRES_PASSWORD='${POSTGRES_PASSWORD}' && \
+                        bash /tmp/deploy-ingest-to-gce.sh"
 
       - name: Show service URLs
         run: |

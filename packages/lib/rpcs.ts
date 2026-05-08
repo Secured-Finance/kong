@@ -18,6 +18,11 @@ class pool {
     return process.env[`HTTP_FULLNODE_${chain.id}`] as string
   }
 
+  private getGlifApiKey(chain: Chain | undefined) {
+    if(!chain) return undefined
+    return process.env[`GLIF_API_KEY_${chain.id}`] || process.env.GLIF_API_KEY
+  }
+
   private key(chain: Chain, archive: boolean) {
     return `${chain.id}-${archive}`
   }
@@ -29,15 +34,16 @@ class pool {
 
   private setupRpcs() {
     for(const chain of chains) {
+      const glifApiKey = this.getGlifApiKey(chain)
       for(const archive of [true, false]) {
         this.rpcs[this.key(chain, archive)] = {
           clients: Array(this.size).fill(createPublicClient({
             chain, transport: http(this.http(chain, archive), {
               batch: { batchSize: Number(process.env['RPC_BATCH_SIZE'] || 0) },
               fetchOptions: {
-                headers: process.env.GLIF_API_KEY && chain.id.toString().startsWith('314')
+                headers: glifApiKey && chain.id.toString().startsWith('314')
                   ? {
-                    'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
+                    'Authorization': `Bearer ${glifApiKey}`,
                   }
                   : undefined,
               }
@@ -58,12 +64,13 @@ class pool {
         const pointer = rpcsForKey.pointers.recycle
         const to_recycle = clients[pointer]
         console.log('♻️ ', 'rpc', chainId, pointer)
+        const glifApiKey = this.getGlifApiKey(to_recycle.chain)
         clients[pointer] = createPublicClient({
           chain: to_recycle.chain, transport: http(this.http(to_recycle.chain as Chain, archive), {
             fetchOptions: {
-              headers: process.env.GLIF_API_KEY && to_recycle.chain?.id.toString().startsWith('314')
+              headers: glifApiKey && to_recycle.chain?.id.toString().startsWith('314')
                 ? {
-                  'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
+                  'Authorization': `Bearer ${glifApiKey}`,
                 }
                 : undefined,
             }
