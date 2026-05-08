@@ -23,10 +23,19 @@ on:
   push:
     branches:
       - main
+      - develop
     paths:
       - 'packages/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
+    inputs:
+      network:
+        description: 'The environment to deploy to (overrides branch-based default)'
+        required: false
+        type: choice
+        options:
+          - development
+          - production
 
 env:
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -37,6 +46,8 @@ env:
   GCE_INSTANCE_NAME: ${{ vars.GCE_INSTANCE_NAME }}
   SA_WEB: ${{ vars.SA_WEB }}
   SA_JOBS: ${{ vars.SA_JOBS }}
+  WEB_SERVICE_NAME: ${{ vars.WEB_SERVICE_NAME }}
+  TERMINAL_JOB_NAME: ${{ vars.TERMINAL_JOB_NAME }}
   IMAGE_WEB: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-web
   IMAGE_INGEST: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-ingest
   IMAGE_TERMINAL: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-terminal
@@ -53,11 +64,21 @@ env:
   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
 jobs:
+  identify-env:
+    if: github.event_name != 'workflow_dispatch'
+    name: Identify the environment
+    uses: ./.github/workflows/identify-env.yml
+    with:
+      branch_name: ${{ github.ref }}
+
   build-and-deploy:
     permissions:
       contents: 'read'
       id-token: 'write'   # for WIF
     runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: [identify-env]
+    environment: ${{ github.event.inputs.network || needs.identify-env.outputs.environment_name }}
 
     steps:
       - name: Checkout
@@ -126,7 +147,7 @@ jobs:
       # Deploy web service
       - name: "Deploy Cloud Run service: web"
         run: |
-          gcloud run deploy web \
+          gcloud run deploy ${WEB_SERVICE_NAME} \
             --image ${IMAGE_WEB}:commit-${{ steps.meta.outputs.sha }} \
             --region ${REGION} \
             --platform managed \
@@ -150,12 +171,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          JOB_NAME=terminal-fanout-abis
           # Delete existing job if it exists
-          if gcloud run jobs describe ${JOB_NAME} --region=${REGION} >/dev/null 2>&1; then
-            gcloud run jobs delete ${JOB_NAME} --region=${REGION} --quiet
+          if gcloud run jobs describe ${TERMINAL_JOB_NAME} --region=${REGION} >/dev/null 2>&1; then
+            gcloud run jobs delete ${TERMINAL_JOB_NAME} --region=${REGION} --quiet
           fi
-          gcloud run jobs create ${JOB_NAME} \
+          gcloud run jobs create ${TERMINAL_JOB_NAME} \
             --image ${IMAGE_TERMINAL}:commit-${{ steps.meta.outputs.sha }} \
             --region ${REGION} \
             --service-account ${SA_JOBS} \
@@ -197,7 +217,7 @@ jobs:
       - name: Show service URLs
         run: |
           echo "Web service URL:"
-          gcloud run services describe web --region=${REGION} --format='value(status.url)'
+          gcloud run services describe ${WEB_SERVICE_NAME} --region=${REGION} --format='value(status.url)'
           echo ""
           echo "Ingest service running on GCE instance: ${GCE_INSTANCE_NAME}"
           GCE_IP=$(gcloud compute instances describe ${GCE_INSTANCE_NAME} \
