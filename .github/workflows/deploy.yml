@@ -183,6 +183,7 @@ jobs:
             --region ${REGION} \
             --service-account ${SA_JOBS} \
             --vpc-connector ${VPC_CONNECTOR} \
+            --set-env-vars=HTTP_ARCHIVE_1=${RPC_URI_FOR_1},HTTP_FULLNODE_1=${RPC_URI_FOR_1} \
             --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
             --set-env-vars=GLIF_API_KEY_314=${GLIF_API_KEY_314} \
             --set-env-vars=GLIF_API_KEY_314159=${GLIF_API_KEY_314159} \
