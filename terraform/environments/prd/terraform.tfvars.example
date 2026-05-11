@@ -7,19 +7,19 @@ region     = "asia-northeast1"
 gce_zone   = "asia-northeast1-a"
 
 # Optional: Resource names (environment-specific)
-# vpc_name          = "dev-vpc-kong"
-# gce_instance_name = "dev-kong-ingest-redis"
-# subnet_name       = "dev-subnet-kong"
-# router_name       = "dev-router-kong"
-# nat_name          = "dev-nat-kong"
-# vpc_connector_name = "dev-svc-connector-kong"
-# firewall_ssh_name  = "dev-allow-ssh-kong"
-# firewall_redis_name = "dev-allow-redis-kong"
+# vpc_name          = "prd-vpc-kong"
+# gce_instance_name = "prd-kong-ingest-redis"
+# subnet_name       = "prd-subnet-kong"
+# router_name       = "prd-router-kong"
+# nat_name          = "prd-nat-kong"
+# vpc_connector_name = "prd-svc-connector-kong"
+# firewall_ssh_name  = "prd-allow-ssh-kong"
+# firewall_redis_name = "prd-allow-redis-kong"
 
 # Optional: Service account names (runtime services only)
-# sa_web_name  = "dev-sa-kong-web"
-# sa_gce_name  = "dev-sa-kong-gce"
-# sa_jobs_name = "dev-sa-kong-jobs"
+# sa_web_name  = "prd-sa-kong-web"
+# sa_gce_name  = "prd-sa-kong-gce"
+# sa_jobs_name = "prd-sa-kong-jobs"
 
 # Optional: Network configuration
 # subnet_ip_cidr        = "10.10.0.0/20"
