@@ -28,9 +28,7 @@ COPY --from=deps /app/package.json ./
 COPY packages/lib ./packages/lib
 COPY packages/ingest ./packages/ingest
 COPY config ./config
-# Add chain configuration script
-COPY packages/ingest/scripts/generate-chains-config.sh /usr/local/bin/
 WORKDIR /app/packages/ingest
 EXPOSE 8080
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["sh", "-c", "generate-chains-config.sh && bun run production"]
+CMD ["sh", "-c", "/app/packages/ingest/scripts/generate-chains-config.sh && bun run production"]
