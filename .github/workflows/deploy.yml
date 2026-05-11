@@ -51,6 +51,7 @@ env:
   IMAGE_WEB: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-web
   IMAGE_INGEST: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-ingest
   IMAGE_TERMINAL: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-terminal
+  KONG_CHAINS: ${{ vars.KONG_CHAINS }}
   RPC_URI_FOR_1: ${{ secrets.RPC_URI_FOR_1 }}
   RPC_URI_FOR_314159: ${{ secrets.RPC_URI_FOR_314159 }}
   GLIF_API_KEY_314: ${{ secrets.GLIF_API_KEY_314 }}
@@ -205,6 +206,7 @@ jobs:
             --zone=${ZONE} \
             --project=${PROJECT_ID} \
             --command="export IMAGE_INGEST=${IMAGE_INGEST} && \
+                        export KONG_CHAINS='${KONG_CHAINS}' && \
                         export RPC_URI_FOR_1='${RPC_URI_FOR_1}' && \
                         export RPC_URI_FOR_314159='${RPC_URI_FOR_314159}' && \
                         export GLIF_API_KEY_314='${GLIF_API_KEY_314}' && \

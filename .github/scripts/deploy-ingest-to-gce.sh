@@ -20,6 +20,7 @@ sudo docker run -d \
   --name kong-ingest \
   --restart unless-stopped \
   --network host \
+  -e KONG_CHAINS="${KONG_CHAINS:-}" \
   -e HTTP_ARCHIVE_1="${RPC_URI_FOR_1}" \
   -e HTTP_FULLNODE_1="${RPC_URI_FOR_1}" \
   -e HTTP_ARCHIVE_314159="${RPC_URI_FOR_314159}" \
