@@ -53,6 +53,7 @@ env:
   IMAGE_TERMINAL: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}/kong-terminal
   KONG_CHAINS: ${{ vars.KONG_CHAINS }}
   RPC_URI_FOR_1: ${{ secrets.RPC_URI_FOR_1 }}
+  RPC_URI_FOR_314: ${{ secrets.RPC_URI_FOR_314 }}
   RPC_URI_FOR_314159: ${{ secrets.RPC_URI_FOR_314159 }}
   GLIF_API_KEY_314: ${{ secrets.GLIF_API_KEY_314 }}
   GLIF_API_KEY_314159: ${{ secrets.GLIF_API_KEY_314159 }}
@@ -160,6 +161,7 @@ jobs:
             --min-instances=1 \
             --concurrency=40 \
             --set-env-vars=HTTP_ARCHIVE_1=${RPC_URI_FOR_1},HTTP_FULLNODE_1=${RPC_URI_FOR_1} \
+            --set-env-vars=HTTP_ARCHIVE_314=${RPC_URI_FOR_314},HTTP_FULLNODE_314=${RPC_URI_FOR_314} \
             --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
             --set-env-vars=GLIF_API_KEY_314=${GLIF_API_KEY_314} \
             --set-env-vars=GLIF_API_KEY_314159=${GLIF_API_KEY_314159} \
@@ -184,6 +186,7 @@ jobs:
             --service-account ${SA_JOBS} \
             --vpc-connector ${VPC_CONNECTOR} \
             --set-env-vars=HTTP_ARCHIVE_1=${RPC_URI_FOR_1},HTTP_FULLNODE_1=${RPC_URI_FOR_1} \
+            --set-env-vars=HTTP_ARCHIVE_314=${RPC_URI_FOR_314},HTTP_FULLNODE_314=${RPC_URI_FOR_314} \
             --set-env-vars=HTTP_ARCHIVE_314159=${RPC_URI_FOR_314159},HTTP_FULLNODE_314159=${RPC_URI_FOR_314159} \
             --set-env-vars=GLIF_API_KEY_314=${GLIF_API_KEY_314} \
             --set-env-vars=GLIF_API_KEY_314159=${GLIF_API_KEY_314159} \
@@ -209,6 +212,7 @@ jobs:
             --command="export IMAGE_INGEST=${IMAGE_INGEST} && \
                         export KONG_CHAINS='${KONG_CHAINS}' && \
                         export RPC_URI_FOR_1='${RPC_URI_FOR_1}' && \
+                        export RPC_URI_FOR_314='${RPC_URI_FOR_314}' && \
                         export RPC_URI_FOR_314159='${RPC_URI_FOR_314159}' && \
                         export GLIF_API_KEY_314='${GLIF_API_KEY_314}' && \
                         export GLIF_API_KEY_314159='${GLIF_API_KEY_314159}' && \

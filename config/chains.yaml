@@ -2,5 +2,6 @@
 chains: [
   'mainnet',
   # 'arbitrum',
-  'filecoin'
+  'filecoin',
+  'filecoinCalibration'
 ]

@@ -30,7 +30,8 @@ abis:
       { chainId: 1, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 24387790 },
       # { chainId: 42161, address: '0xff31A1B020c868F6eA3f61Eb953344920EeCA3af', inceptBlock: 171850013 },
       # { chainId: 42161, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 265347635 },
-      { chainId: 314159, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 3085591 },
+      { chainId: 314, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 6253742 },
+      { chainId: 314159, address: '0x0377b4daDDA86C89A0091772B79ba67d0E5F7198', inceptBlock: 3085546 },
     ]
 
   - abiPath: 'yearn/3/registry3'
@@ -49,6 +50,7 @@ abis:
       # { chainId: 42161, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 187480878 },
       # { chainId: 42161, address: '0x5577EdcB8A856582297CdBbB07055E6a6E38eb5f', inceptBlock: 256920915 },
       # { chainId: 42161, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 269623415 },
+      { chainId: 314, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 6253735 },
       { chainId: 314159, address: '0x770D0d1Fb036483Ed4AbB6d53c1C88fb277D812F', inceptBlock: 3085508 },
     ]
 
@@ -96,6 +98,7 @@ abis:
       # { chainId: 34443, address: '0xca12459a931643BF28388c67639b3F352fe9e5Ce', inceptBlock: 4574184 },
       # { chainId: 80094, address: '0xca12459a931643BF28388c67639b3F352fe9e5Ce', inceptBlock: 827660 },
       # { chainId: 747474, address: '0xca12459a931643BF28388c67639b3F352fe9e5Ce', inceptBlock: 2909974 },
+      { chainId: 314, address: '0xca12459a931643BF28388c67639b3F352fe9e5Ce', inceptBlock: 6253756 },
       { chainId: 314159, address: '0xca12459a931643BF28388c67639b3F352fe9e5Ce', inceptBlock: 3085571 },
     ]
 
@@ -109,6 +112,7 @@ abis:
     sources: [
       { chainId: 1, address: '0xe28fCC9FB2998ba57754789F6666DAa8C815614D', inceptBlock: 19388854 },
       # { chainId: 42161, address: '0x444045c5C13C246e117eD36437303cac8E250aB0', inceptBlock: 187480878 },
+      { chainId: 314, address: '0xe28fCC9FB2998ba57754789F6666DAa8C815614D', inceptBlock: 6253737 },
       { chainId: 314159, address: '0xe28fCC9FB2998ba57754789F6666DAa8C815614D', inceptBlock: 3085510 }
     ]
 
